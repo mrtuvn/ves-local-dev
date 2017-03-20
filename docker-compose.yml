@@ -1,0 +1,176 @@
+version: "2"
+services:
+  varnish:
+    #image: fballiano/varnish
+    build:
+      context: varnish/
+    #environment:
+      #- VIRTUAL_HOST=magento2.docker
+      #- VIRTUAL_PORT=80
+      #- HTTPS_METHOD=noredirect
+      #- CACHE_SIZE=256M
+    #volumes:
+      #- ./varnish/etc/varnish/:/etc/default/varnish/
+      #- ./varnish/etc/varnish.vcl:/data/varnish.vcl
+    depends_on:
+      - web
+    links:
+      - web
+    ports:
+      - "8080:8080"
+      - "6082:6082"
+
+  ssl:
+    image: fballiano/nginx-ssl-for-magento2
+    depends_on:
+      - web
+    links:
+      - web
+    ports:
+      - "443:443"
+
+  webserver:
+    image: "nginx:alpine"
+    container_name: ves_nginx
+    #build:
+      #context: nginx/
+    ports:
+      - "80:80"
+      - 443
+    #links:
+      #- fpm
+      #- redis
+      #- db
+    depends_on:
+      - "appserver"
+    volumes:
+      - "./env/webserver/etc/nginx.conf:/etc/nginx/nginx.conf"
+    volumes_from:
+      - "appserver"
+    #env_file:
+      #- ./global.env
+    #environment:
+      #- VIRTUAL_HOST=magento2.docker
+      #- VIRTUAL_PORT=80
+      #- HTTPS_METHOD=noredirect
+  
+  appserver:
+    image: "vnecoms/php:7.1"
+    volumes:
+      - "./src:/mnt/www"
+      - "./env/appserver/etc/php.ini:/usr/local/etc/php/php.ini"
+    depends_on:
+      - "database"
+      - "mail"
+      - "cache"
+      - "fpc"
+      - "session"
+      - "messagequeue"
+
+  appserver_debug:
+    image: "vnecoms/php:7.1-xdebug"
+    volumes_from:
+      - "appserver"
+    depends_on:
+      - "appserver"
+
+  database:
+    image: mariadb:10
+    ports:
+      - "3306:3306"
+    volumes:
+      - "/var/lib/mysql"
+      - "./env/database/etc/mysql/my.cnf:/etc/mysql/my.cnf"
+    environment:
+      MYSQL_ROOT_PASSWORD: "root"
+      MYSQL_DATABASE: "magento2"
+      MYSQL_USER: "magento2"
+      MYSQL_PASSWORD: "magento2"
+      TERM: "meh"
+
+  mail:
+    image: "vnecoms/mailcatcher"
+    ports:
+      - "1080:80"
+
+  cache:
+    image: "redis:alpine"
+
+  fpc:
+    image: "redis:alpine"
+
+  session:
+    image: "redis:alpine"
+
+  messagequeue:
+    image: "rabbitmq:management"
+    ports:
+     - "15672:15672"
+
+  #redis:
+    #restart: always
+    #image: redis:3.0.7
+    #ports:
+      #- 6379
+
+  #rabbit:
+    #restart: always
+    #image: rabbitmq:3-management
+    #ports:
+      #- "15672"
+      #- "5672"
+  
+  phpmyadmin:
+    image: phpmyadmin/phpmyadmin
+    container_name: m2docker_phpmyadmin
+    environment:
+     - PMA_HOST=db
+    restart: always
+    links:
+      - db
+    ports:
+     - "8081:8081"
+    volumes:
+     - /sessions
+
+  cli:
+    hostname: cli.magento2.docker
+    image: meanbee/magento2-php:7.0-cli
+    #build:
+      #context: 7.0-cli/
+    links:
+      - db
+    volumes:
+      - ~/.composer/cache:/root/.composer/cache
+    volumes_from:
+      - appdata
+    env_file:
+      - ./global.env
+      - ./composer.env
+    environment:
+      - M2SETUP_INSTALL_DB=true
+      - M2SETUP_DB_HOST=db
+      - M2SETUP_DB_NAME=magento2
+      - M2SETUP_DB_USER=magento2
+      - M2SETUP_DB_PASSWORD=magento2
+      - M2SETUP_BASE_URL=http://magento2.docker/
+      - M2SETUP_BACKEND_FRONTNAME=admin
+      - M2SETUP_ADMIN_FIRSTNAME=Tu
+      - M2SETUP_ADMIN_LASTNAME=Nguyen
+      - M2SETUP_ADMIN_EMAIL=admin@gmail.com
+      - M2SETUP_ADMIN_USER=admin
+      - M2SETUP_ADMIN_PASSWORD=123123q
+      - M2SETUP_VERSION=2.1.*
+      - M2SETUP_USE_SAMPLE_DATA=true
+
+  #cron:
+    #image: meanbee/magento2-php:7.0-cli
+    #hostname: magento2-cron.docker
+    #command: run-cron
+    #environment:
+      #- ENABLE_SENDMAIL=true
+    #volumes_from:
+      #- appdata
+    #links:
+      #- db
+
