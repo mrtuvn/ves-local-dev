@@ -1,4 +1,4 @@
-# Redbox Docker
+# Vnecoms Devbox Docker
 
 Vnecoms development environment for Magento 2,
 based on Docker.
