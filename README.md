@@ -47,6 +47,9 @@ Vnecoms Docker comes with:
 * Mailcatcher, for receiving emails.
 * RabbitMQ Coming soon
 * Varnish for FullPage Cache Coming soon
+* SSL Built-in for Https request Coming soon
+* Cronjob Coming soon
+
 
 
 ## Debugging
