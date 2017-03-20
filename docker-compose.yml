@@ -1,21 +1,20 @@
 version: "2"
 services:
-  
-  ssl:
-    image: fballiano/nginx-ssl-for-magento2
-    depends_on:
-      - web
-    links:
-      - web
-    ports:
-      - "443:443"
+
+  #ssl:
+    #image: fballiano/nginx-ssl-for-magento2
+    #depends_on:
+      #- webserver
+    #links:
+      #- webserver
+    #ports:
+      #- "443:443"
 
   webserver:
     image: "nginx:alpine"
     container_name: ves_nginx
     ports:
       - "80:80"
-      - 443
     depends_on:
       - "appserver"
     volumes:
@@ -25,22 +24,22 @@ services:
     env_file:
       - ./global.env
 
-  
+
   appserver:
-    image: "vnecoms/php:7.1"
+    image: "mrtuvn/php:7.1"
     volumes:
       - "./src:/mnt/www"
       - "./env/appserver/etc/php.ini:/usr/local/etc/php/php.ini"
     depends_on:
       - "database"
-      - "mail"
+      #- "mail"
       - "cache"
       - "fpc"
       - "session"
       - "messagequeue"
 
   appserver_debug:
-    image: "vnecoms/php:7.1-xdebug"
+    image: "mrtuvn/php:7.1-xdebug"
     volumes_from:
       - "appserver"
     depends_on:
@@ -60,10 +59,23 @@ services:
       MYSQL_PASSWORD: "magento2"
       TERM: "meh"
 
-  mail:
-    image: "vnecoms/mailcatcher"
+  phpmyadmin:
+    image: phpmyadmin/phpmyadmin
+    container_name: m2docker_phpmyadmin
+    environment:
+     - PMA_HOST=localhost
+    restart: always
+    links:
+      - database
     ports:
-      - "1080:80"
+     - "8081:8081"
+    volumes:
+     - /sessions
+
+  #mail:
+    #image: "vnecoms/mailcatcher"
+    #ports:
+      #- "1080:80"
 
   cache:
     image: "redis:alpine"
@@ -79,20 +91,6 @@ services:
     ports:
      - "15672:15672"
 
-  
-  phpmyadmin:
-    image: phpmyadmin/phpmyadmin
-    container_name: m2docker_phpmyadmin
-    environment:
-     - PMA_HOST=db
-    restart: always
-    links:
-      - db
-    ports:
-     - "8081:8081"
-    volumes:
-     - /sessions
-
   #cron:
     #image: meanbee/magento2-php:7.0-cli
     #hostname: magento2-cron.docker
@@ -103,4 +101,3 @@ services:
       #- appdata
     #links:
       #- db
-
