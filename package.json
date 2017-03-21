@@ -1,0 +1,23 @@
+{
+  "name": "ves-local",
+  "version": "1.0.0",
+  "description": "Local development for magento 2 base on docker",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/mrtuvn/ves-local-dev.git"
+  },
+  "keywords": [
+    "magento2",
+    "docker"
+  ],
+  "author": "Nguyen Anh Tu",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/mrtuvn/ves-local-dev/issues"
+  },
+  "homepage": "https://github.com/mrtuvn/ves-local-dev#readme"
+}

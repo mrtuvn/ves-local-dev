@@ -12,9 +12,10 @@ services:
 
   webserver:
     image: "nginx:alpine"
-    container_name: ves_nginx
+    container_name: ves_webserver
     ports:
       - "80:80"
+      - "443:443"
     depends_on:
       - "appserver"
     volumes:
@@ -27,6 +28,7 @@ services:
 
   appserver:
     image: "mrtuvn/php:7.1"
+    container_name: ves_appserver
     volumes:
       - "./src:/mnt/www"
       - "./env/appserver/etc/php.ini:/usr/local/etc/php/php.ini"
@@ -47,6 +49,7 @@ services:
 
   database:
     image: mariadb:10
+    container_name: ves_database
     ports:
       - "3306:3306"
     volumes:
@@ -61,7 +64,7 @@ services:
 
   phpmyadmin:
     image: phpmyadmin/phpmyadmin
-    container_name: m2docker_phpmyadmin
+    container_name: ves_phpmyadmin
     environment:
      - PMA_HOST=localhost
     restart: always
@@ -73,9 +76,9 @@ services:
      - /sessions
 
   #mail:
-    #image: "vnecoms/mailcatcher"
+    #image: "mrtuvn/mailcatcher"
     #ports:
-      #- "1080:80"
+    #  - "1080:80"
 
   cache:
     image: "redis:alpine"
